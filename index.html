@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>스타워즈 : 소행성 회피</title>
+    <title>다스베이더의 우주 전투</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
         
@@ -17,17 +17,17 @@
             min-height: 100vh;
             font-family: 'Orbitron', monospace;
             overflow: hidden;
-            color: #00ff00;
+            color: #ff0000;
         }
         
         #gameContainer {
             position: relative;
-            border: 3px solid #00ccff;
+            border: 3px solid #ff0000;
             border-radius: 5px;
             box-shadow: 
-                0 0 20px #00ccff,
-                inset 0 0 20px rgba(0, 204, 255, 0.1);
-            background: linear-gradient(45deg, #001122 0%, #000011 50%, #001122 100%);
+                0 0 20px #ff0000,
+                inset 0 0 20px rgba(255, 0, 0, 0.1);
+            background: linear-gradient(45deg, #220011 0%, #110000 50%, #220011 100%);
         }
         
         canvas {
@@ -39,13 +39,27 @@
             position: absolute;
             top: 15px;
             right: 15px;
-            color: #00ff00;
+            color: #ff0000;
             font-size: 14px;
             font-weight: 700;
-            text-shadow: 0 0 10px #00ff00;
+            text-shadow: 0 0 10px #ff0000;
             background: rgba(0, 0, 0, 0.8);
             padding: 8px 12px;
-            border: 1px solid #00ff00;
+            border: 1px solid #ff0000;
+            border-radius: 3px;
+        }
+        
+        #score {
+            position: absolute;
+            top: 50px;
+            right: 15px;
+            color: #ffff00;
+            font-size: 14px;
+            font-weight: 700;
+            text-shadow: 0 0 10px #ffff00;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 12px;
+            border: 1px solid #ffff00;
             border-radius: 3px;
         }
         
@@ -98,7 +112,7 @@
         
         .nebula {
             position: absolute;
-            background: radial-gradient(circle, rgba(0, 100, 255, 0.1) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(100, 0, 0, 0.2) 0%, transparent 70%);
             border-radius: 50%;
             animation: drift 20s infinite linear;
         }
@@ -112,10 +126,10 @@
             position: absolute;
             top: 20px;
             left: 20px;
-            color: #ffff00;
+            color: #ff0000;
             font-size: 16px;
             font-weight: 900;
-            text-shadow: 0 0 10px #ffff00;
+            text-shadow: 0 0 10px #ff0000;
             letter-spacing: 2px;
         }
     </style>
@@ -123,21 +137,24 @@
 <body>
     <div id="gameContainer">
         <canvas id="gameCanvas" width="600" height="400"></canvas>
-        <div class="title">STAR WARS</div>
+        <div class="title">DARTH VADER</div>
         <div id="ui">
-            <div>SURVIVAL TIME: <span id="timer">0</span>s</div>
+            <div>SURVIVAL: <span id="timer">0</span>s</div>
+        </div>
+        <div id="score">
+            <div>DESTROYED: <span id="destroyed">0</span></div>
         </div>
         <div id="instructions">
-            <div>PC: ARROW KEYS TO MANEUVER | MOBILE: TOUCH CONTROLS</div>
-            <div>PRESS SPACEBAR TO ENGAGE HYPERDRIVE!</div>
+            <div>화살표: 이동 | 스페이스바: 레이저 발사 | 모바일: 터치 이동/발사</div>
+            <div>스페이스바를 눌러 어둠의 힘을 사용하라!</div>
         </div>
         <div id="gameOver">
-            <div>MISSION FAILED</div>
+            <div>THE FORCE HAS FAILED</div>
             <div style="font-size: 16px; margin-top: 10px; color: #ffff00;">
-                SURVIVAL TIME: <span id="finalTime">0</span> SECONDS
+                생존: <span id="finalTime">0</span>초 | 파괴: <span id="finalScore">0</span>개
             </div>
-            <div style="font-size: 12px; margin-top: 10px; color: #00ccff;">
-                SPACEBAR OR TOUCH TO RESTART MISSION
+            <div style="font-size: 12px; margin-top: 10px; color: #ff0000;">
+                스페이스바 또는 터치로 복수를 시작하라
             </div>
         </div>
     </div>
@@ -149,18 +166,19 @@
         // 픽셀 크기 설정
         const PIXEL_SIZE = 3;
         
-        // X-Wing 스타일 전투기 도트맵
-        const SHIP_PATTERN = [
-            [0,0,0,1,0,0,0,1,0,0,0],
-            [0,0,1,2,1,0,1,2,1,0,0],
+        // 다스베이더 헬멧 도트맵
+        const VADER_PATTERN = [
+            [0,0,0,1,1,1,1,1,0,0,0],
+            [0,0,1,2,2,2,2,2,1,0,0],
             [0,1,2,3,2,2,2,3,2,1,0],
-            [1,2,3,4,3,3,3,4,3,2,1],
-            [0,2,3,3,3,5,3,3,3,2,0],
-            [0,0,2,3,3,3,3,3,2,0,0],
-            [0,0,0,2,2,2,2,2,0,0,0]
+            [0,1,2,2,4,2,4,2,2,1,0],
+            [0,1,2,2,2,5,2,2,2,1,0],
+            [0,1,2,2,5,5,5,2,2,1,0],
+            [0,0,1,2,2,2,2,2,1,0,0],
+            [0,0,0,1,1,6,1,1,0,0,0]
         ];
         
-        // 소행성 도트맵 (더 큰 사이즈)
+        // 소행성 도트맵
         const ASTEROID_PATTERN = [
             [0,0,1,1,1,0,0],
             [0,1,2,2,2,1,0],
@@ -171,42 +189,58 @@
             [0,0,1,1,1,0,0]
         ];
         
-        // 스타워즈 색상 팔레트
-        const SHIP_COLORS = {
+        // 미사일 도트맵
+        const MISSILE_PATTERN = [
+            [1],
+            [2],
+            [2],
+            [1]
+        ];
+        
+        // 다스베이더 색상 팔레트
+        const VADER_COLORS = {
             0: 'transparent',
-            1: '#666666',      // 어두운 회색 (날개 끝)
-            2: '#cccccc',      // 밝은 회색 (본체)
-            3: '#ffffff',      // 흰색 (하이라이트)
-            4: '#00ccff',      // 시안 (엔진)
-            5: '#ff6600'       // 오렌지 (조종석)
+            1: '#222222',      // 어두운 헬멧 테두리
+            2: '#111111',      // 헬멧 본체
+            3: '#444444',      // 눈 부분 하이라이트
+            4: '#ff0000',      // 빨간 눈
+            5: '#666666',      // 호흡기
+            6: '#ff0000'       // 호흡기 라이트
         };
         
         const ASTEROID_COLORS = {
             0: 'transparent',
-            1: '#4a3728',      // 어두운 갈색
-            2: '#8b6914',      // 갈색
-            3: '#daa520'       // 황금색 (광물)
+            1: '#4a3728',
+            2: '#8b6914',
+            3: '#daa520'
+        };
+        
+        const MISSILE_COLORS = {
+            0: 'transparent',
+            1: '#ff0000',
+            2: '#ffff00'
         };
         
         // 게임 상태
         let gameState = 'waiting';
         let gameTime = 0;
         let lastTime = 0;
+        let score = 0;
         
-        // 전투기 객체
-        const ship = {
+        // 다스베이더 객체
+        const vader = {
             x: canvas.width / 2 - 16,
             y: canvas.height - 80,
             width: 33,
-            height: 21,
+            height: 24,
             speed: 6
         };
         
-        // 소행성 배열
+        // 게임 객체들
         let asteroids = [];
-        
-        // 파티클 효과
+        let missiles = [];
         let particles = [];
+        let explosions = [];
         
         // 별과 성운 배경 생성
         function createBackground() {
@@ -225,7 +259,7 @@
                 container.appendChild(star);
             }
             
-            // 성운 효과
+            // 붉은 성운 효과
             for (let i = 0; i < 3; i++) {
                 const nebula = document.createElement('div');
                 nebula.className = 'nebula';
@@ -253,10 +287,10 @@
                             PIXEL_SIZE
                         );
                         
-                        // 글로우 효과
-                        if (colorIndex === 4 || colorIndex === 5) {
+                        // 글로우 효과 (빨간 부분만)
+                        if (colorIndex === 4 || colorIndex === 6) {
                             ctx.shadowColor = colors[colorIndex];
-                            ctx.shadowBlur = 10;
+                            ctx.shadowBlur = 8;
                             ctx.fillRect(
                                 x + col * PIXEL_SIZE,
                                 y + row * PIXEL_SIZE,
@@ -270,24 +304,42 @@
             }
         }
         
-        // 전투기 그리기
-        function drawShip() {
-            drawPattern(SHIP_PATTERN, SHIP_COLORS, ship.x, ship.y);
+        // 다스베이더 그리기
+        function drawVader() {
+            drawPattern(VADER_PATTERN, VADER_COLORS, vader.x, vader.y);
             
-            // 엔진 추진 효과
+            // 다크사이드 오라 효과
             if (gameState === 'playing') {
-                ctx.fillStyle = '#00ccff';
-                ctx.shadowColor = '#00ccff';
-                ctx.shadowBlur = 8;
-                
-                const thrusterY = ship.y + ship.height;
-                ctx.fillRect(ship.x + 6, thrusterY, 2, Math.random() * 8 + 4);
-                ctx.fillRect(ship.x + 9, thrusterY, 2, Math.random() * 6 + 3);
-                ctx.fillRect(ship.x + 22, thrusterY, 2, Math.random() * 6 + 3);
-                ctx.fillRect(ship.x + 25, thrusterY, 2, Math.random() * 8 + 4);
-                
-                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
+                ctx.fillRect(vader.x - 5, vader.y - 5, vader.width + 10, vader.height + 10);
             }
+        }
+        
+        // 미사일 생성
+        function createMissile() {
+            missiles.push({
+                x: vader.x + vader.width / 2 - 1,
+                y: vader.y - 5,
+                width: 3,
+                height: 12,
+                speed: 8
+            });
+        }
+        
+        // 미사일 그리기
+        function drawMissiles() {
+            missiles.forEach(missile => {
+                // 레이저 효과
+                ctx.fillStyle = '#ff0000';
+                ctx.shadowColor = '#ff0000';
+                ctx.shadowBlur = 10;
+                ctx.fillRect(missile.x, missile.y, missile.width, missile.height);
+                ctx.shadowBlur = 0;
+                
+                // 코어
+                ctx.fillStyle = '#ffff00';
+                ctx.fillRect(missile.x + 1, missile.y, 1, missile.height);
+            });
         }
         
         // 소행성 생성
@@ -299,7 +351,8 @@
                 height: 21,
                 speed: Math.random() * 2 + 2,
                 rotation: Math.random() * Math.PI * 2,
-                rotationSpeed: (Math.random() - 0.5) * 0.1
+                rotationSpeed: (Math.random() - 0.5) * 0.1,
+                health: 1
             });
         }
         
@@ -316,17 +369,23 @@
             });
         }
         
-        // 파티클 생성
-        function createExplosion(x, y) {
-            for (let i = 0; i < 15; i++) {
+        // 폭발 효과 생성
+        function createExplosion(x, y, type = 'normal') {
+            const particleCount = type === 'asteroid' ? 20 : 15;
+            const colors = type === 'asteroid' ? 
+                ['#ffff00', '#ff6600', '#ff4444'] : 
+                ['#ff0000', '#ff6600', '#ffff00'];
+                
+            for (let i = 0; i < particleCount; i++) {
                 particles.push({
                     x: x + Math.random() * 20,
                     y: y + Math.random() * 20,
-                    vx: (Math.random() - 0.5) * 8,
-                    vy: (Math.random() - 0.5) * 8,
-                    life: 30,
-                    maxLife: 30,
-                    color: ['#ff6600', '#ff4444', '#ffff00'][Math.floor(Math.random() * 3)]
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    life: 40,
+                    maxLife: 40,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 3 + 1
                 });
             }
         }
@@ -336,11 +395,13 @@
             particles = particles.filter(particle => {
                 particle.x += particle.vx;
                 particle.y += particle.vy;
+                particle.vx *= 0.98;
+                particle.vy *= 0.98;
                 particle.life--;
                 
                 const alpha = particle.life / particle.maxLife;
                 ctx.fillStyle = particle.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
-                ctx.fillRect(particle.x, particle.y, 2, 2);
+                ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
                 
                 return particle.life > 0;
             });
@@ -368,22 +429,46 @@
             gameTime += deltaTime / 1000;
             document.getElementById('timer').textContent = Math.floor(gameTime);
             
-            // 소행성 생성 (난이도 증가)
+            // 소행성 생성
             const asteroidSpawnRate = Math.max(0.008, 0.015 - gameTime * 0.0005);
             if (Math.random() < asteroidSpawnRate) {
                 createAsteroid();
             }
             
+            // 미사일 이동
+            missiles = missiles.filter(missile => {
+                missile.y -= missile.speed;
+                return missile.y > -missile.height;
+            });
+            
             // 소행성 이동
             asteroids = asteroids.filter(asteroid => {
-                asteroid.y += asteroid.speed + gameTime * 0.1; // 시간에 따른 속도 증가
+                asteroid.y += asteroid.speed + gameTime * 0.1;
                 return asteroid.y < canvas.height;
             });
             
-            // 충돌 감지
+            // 미사일과 소행성 충돌 검사
+            missiles.forEach((missile, mIndex) => {
+                asteroids.forEach((asteroid, aIndex) => {
+                    if (checkCollision(missile, asteroid)) {
+                        // 폭발 효과
+                        createExplosion(asteroid.x + asteroid.width/2, asteroid.y + asteroid.height/2, 'asteroid');
+                        
+                        // 미사일과 소행성 제거
+                        missiles.splice(mIndex, 1);
+                        asteroids.splice(aIndex, 1);
+                        
+                        // 점수 증가
+                        score++;
+                        document.getElementById('destroyed').textContent = score;
+                    }
+                });
+            });
+            
+            // 베이더와 소행성 충돌 검사
             asteroids.forEach(asteroid => {
-                if (checkCollision(ship, asteroid)) {
-                    createExplosion(ship.x, ship.y);
+                if (checkCollision(vader, asteroid)) {
+                    createExplosion(vader.x + vader.width/2, vader.y + vader.height/2);
                     gameOver();
                 }
             });
@@ -393,26 +478,27 @@
         
         // 렌더링
         function render() {
-            // 화면 클리어 (스페이스 느낌의 어두운 배경)
-            ctx.fillStyle = 'rgba(0, 0, 5, 0.1)';
+            // 화면 클리어
+            ctx.fillStyle = 'rgba(0, 0, 10, 0.1)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             // 이동하는 별 효과
             if (gameState === 'playing') {
                 ctx.fillStyle = 'white';
-                for (let i = 0; i < 5; i++) {
+                for (let i = 0; i < 3; i++) {
                     const x = Math.random() * canvas.width;
                     const y = Math.random() * canvas.height;
-                    ctx.fillRect(x, y, 1, Math.random() * 10 + 5);
+                    ctx.fillRect(x, y, 1, Math.random() * 8 + 3);
                 }
             }
             
             if (gameState === 'playing') {
-                drawShip();
+                drawVader();
+                drawMissiles();
                 drawAsteroids();
                 updateParticles();
             } else if (gameState === 'waiting') {
-                drawShip();
+                drawVader();
             }
             
             requestAnimationFrame(render);
@@ -422,18 +508,22 @@
         function startGame() {
             gameState = 'playing';
             gameTime = 0;
+            score = 0;
             asteroids = [];
+            missiles = [];
             particles = [];
-            ship.x = canvas.width / 2 - 16;
+            vader.x = canvas.width / 2 - 16;
             lastTime = performance.now();
             document.getElementById('instructions').style.display = 'none';
             document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('destroyed').textContent = '0';
         }
         
         // 게임 오버
         function gameOver() {
             gameState = 'gameOver';
             document.getElementById('finalTime').textContent = Math.floor(gameTime);
+            document.getElementById('finalScore').textContent = score;
             document.getElementById('gameOver').style.display = 'block';
         }
         
@@ -447,6 +537,8 @@
                 e.preventDefault();
                 if (gameState === 'waiting' || gameState === 'gameOver') {
                     startGame();
+                } else if (gameState === 'playing') {
+                    createMissile();
                 }
             }
         });
@@ -455,14 +547,14 @@
             keys[e.code] = false;
         });
         
-        // 전투기 이동 처리
+        // 베이더 이동 처리
         function handleInput() {
             if (gameState === 'playing') {
-                if (keys['ArrowLeft'] && ship.x > 0) {
-                    ship.x -= ship.speed;
+                if (keys['ArrowLeft'] && vader.x > 0) {
+                    vader.x -= vader.speed;
                 }
-                if (keys['ArrowRight'] && ship.x < canvas.width - ship.width) {
-                    ship.x += ship.speed;
+                if (keys['ArrowRight'] && vader.x < canvas.width - vader.width) {
+                    vader.x += vader.speed;
                 }
             }
             requestAnimationFrame(handleInput);
@@ -470,14 +562,22 @@
         
         // 터치 입력 처리
         let touchStartX = 0;
+        let lastTouchTime = 0;
         
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             touchStartX = e.touches[0].clientX;
+            const currentTime = Date.now();
             
             if (gameState === 'waiting' || gameState === 'gameOver') {
                 startGame();
+            } else if (gameState === 'playing') {
+                // 더블탭으로 미사일 발사
+                if (currentTime - lastTouchTime < 300) {
+                    createMissile();
+                }
             }
+            lastTouchTime = currentTime;
         });
         
         canvas.addEventListener('touchmove', (e) => {
@@ -486,10 +586,24 @@
                 const touchX = e.touches[0].clientX;
                 const deltaX = touchX - touchStartX;
                 
-                ship.x += deltaX * 0.8;
-                ship.x = Math.max(0, Math.min(canvas.width - ship.width, ship.x));
+                vader.x += deltaX * 0.8;
+                vader.x = Math.max(0, Math.min(canvas.width - vader.width, vader.x));
                 
                 touchStartX = touchX;
+            }
+        });
+        
+        // 터치로 미사일 발사 (화면 상단 탭)
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (gameState === 'playing') {
+                const rect = canvas.getBoundingClientRect();
+                const touchY = e.changedTouches[0].clientY - rect.top;
+                
+                // 화면 상단 1/3을 탭하면 미사일 발사
+                if (touchY < canvas.height / 3) {
+                    createMissile();
+                }
             }
         });
         
